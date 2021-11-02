@@ -4,19 +4,23 @@ args=commandArgs(trailingOnly=TRUE)
 
 library(genbankr)
 
-genefilter<-function(args[1],args[2],args[3]){
+genefilter<-function(genes=args[1],workdir=args[2],name=args[3]){
     if (length(args)==0) {
         stop("Must supply three arguments: a List of Genes in vector format, the name of the output file, and a directory where the files are stored.", call.=FALSE)
+    } else if args[1]=='') {
+        stop("You must provide at least one gene to search for.")
     } else if (args[2]=='') {
-        args[2] = "genefilter_OUT"
+        args[2] = getwd()
+    } else if (args[3]=='') {
+        args[3]="genefilter_OUT.csv"
     }
-    genelist=vector()
-    genelist=append(genelist,args[1],1)
-    files=list.files(args[3])
+    #creating a vector of genes
+    genelist=genes
+    files=list.files(workdir)
     genomes<-lapply(files,parseGenBank)
-    yn<-matrix(NA,nrow=length(genomes),ncol=length(args[1]))
+    yn<-matrix(NA,nrow=length(genomes),ncol=length(genes))
     rownames(yn)=files
-    colnames(yn)<-args[1]
+    colnames(yn)<-genes
     for(i in 1:length(genomes)){
         temp<-list()
         for(j in 2:length(genomes[[i]]$FEATURES)){
@@ -32,3 +36,5 @@ genefilter<-function(args[1],args[2],args[3]){
     }
     write.csv(yn,file = args[2])
 }
+
+gfilter.gbk(genes=vit,name="vit.csv",files=files)
