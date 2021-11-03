@@ -3,16 +3,20 @@
 args=commandArgs(trailingOnly=TRUE)
 
 library(genbankr)
+library(matrixStats)
 
-genefilter<-function(genes=args[1],workdir=args[2],name=args[3]){
-    if (length(args)==0) {
+genefilter<-function(genes=args[1],workdir=args[2],filename=args[3],count_matrix=args[4]){
+    if(length(args)==0) {
         stop("Must supply three arguments: a List of Genes in vector format, the name of the output file, and a directory where the files are stored.", call.=FALSE)
-    } else if args[1]=='') {
+    } else if(args[1]=='') {
         stop("You must provide at least one gene to search for.")
-    } else if (args[2]=='') {
+    } else if(args[2]=='') {
         args[2] = getwd()
-    } else if (args[3]=='') {
+    } else if(args[3]=='') {
         args[3]="genefilter_OUT.csv"
+    }
+    else if(args[4]=='') {
+        args[4]=TRUE
     }
     #creating a vector of genes
     genelist=genes
@@ -21,6 +25,10 @@ genefilter<-function(genes=args[1],workdir=args[2],name=args[3]){
     yn<-matrix(NA,nrow=length(genomes),ncol=length(genes))
     rownames(yn)=files
     colnames(yn)<-genes
+    #making a count matrix to count number of genes that appear in each genome. If user says 'FALSE', then the count matrix will not be applied and the function will output the matrix of yes/no
+    countmat<--matrix(NA,nrow=length(genomes),ncol=1)
+    rownames(countmat)<-genomes
+    colnames(countmat)<-"Count of Genes"
     for(i in 1:length(genomes)){
         temp<-list()
         for(j in 2:length(genomes[[i]]$FEATURES)){
@@ -34,7 +42,12 @@ genefilter<-function(genes=args[1],workdir=args[2],name=args[3]){
             }
         }
     }
-    write.csv(yn,file = args[2])
+    count<-rowCounts(yn,value="yes")
+    countmat[,1]=count
+    if(count_matrix==TRUE){
+        write.csv(countmat,file=filename)
+    }
+    else if(count_matrix==FALSE){
+        write.csv(yn,file=filename)
+    }
 }
-
-gfilter.gbk(genes=vit,name="vit.csv",files=files)
